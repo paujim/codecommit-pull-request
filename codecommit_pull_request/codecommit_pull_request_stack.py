@@ -56,8 +56,14 @@ class CodecommitPullRequestStack(core.Stack):
         project = codebuild.Project(
             scope=self,
             id="PullRequestCodeCommitProject",
-            source=codebuild.Source.code_commit(repository=repo)
+            source=codebuild.Source.code_commit(repository=repo),
+            badge=True,
         )
+
+        # project.on_build_started(
+        #     id="on-build-started",
+        #     target=targets.LambdaFunction(handler=pull_request_fn),
+        # )
         project.on_build_succeeded(
             id="on-build-succeeded",
             target=targets.LambdaFunction(handler=codebuild_result_fn),
