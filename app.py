@@ -6,6 +6,10 @@ from codecommit_pull_request.codecommit_pull_request_stack import CodecommitPull
 
 
 app = core.App()
-CodecommitPullRequestStack(app, "codecommit-pull-request")
+CodecommitPullRequestStack(
+    scope=app,
+    id="codecommit-pull-request",
+    repository_name="test-repo",
+    )
 
 app.synth()
