@@ -13,20 +13,17 @@ def lambda_handler(event, context):
             before_commit_id = item['value']
         if item['name'] == 'destinationCommit':
             after_commit_id = item['value']
-    s3_prefix = 's3-{0}'.format(event['region']
-                                ) if event['region'] != 'us-east-1' else 's3'
+
+    build_id_arn = event['detail']['build-id']
+    build_id = build_id_arn.split("/", 1)[-1]
+
+    log_link = event['detail']['additional-information']['logs']['deep-link']
     for phase in event['detail']['additional-information']['phases']:
         if phase.get('phase-status') == 'FAILED':
-            badge = 'https://{0}.amazonaws.com/codefactory-{1}-prod-default-build-badges/failing.svg'.format(
-                s3_prefix, event['region'])
-            content = '![Failing]({0} "Failing") - See the [Logs]({1})'.format(
-                badge, event['detail']['additional-information']['logs']['deep-link'])
+            content = f'💥 {build_id} **Failed** - See the [Logs]({log_link})'
             break
         else:
-            badge = 'https://{0}.amazonaws.com/codefactory-{1}-prod-default-build-badges/passing.svg'.format(
-                s3_prefix, event['region'])
-            content = '![Passing]({0} "Passing") - See the [Logs]({1})'.format(
-                badge, event['detail']['additional-information']['logs']['deep-link'])
+            content = f'✔️ {build_id} **Succeed** - See the [Logs]({log_link})'
     codecommit_client.post_comment_for_pull_request(
         pullRequestId=pull_request_id,
         repositoryName=repository_name,

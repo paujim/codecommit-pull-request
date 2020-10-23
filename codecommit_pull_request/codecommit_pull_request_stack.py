@@ -38,9 +38,9 @@ class CodecommitPullRequestStack(core.Stack):
     def __init__(self, scope: core.Construct, id: str, repository_name: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        pull_request_fn = _create_fn_from_folder(
+        codebuild_start_fn = _create_fn_from_folder(
             scope=self,
-            folder_name="pull_request_fn",
+            folder_name="codebuild_start_fn",
         )
         codebuild_result_fn = _create_fn_from_folder(
             scope=self,
@@ -60,10 +60,10 @@ class CodecommitPullRequestStack(core.Stack):
             badge=True,
         )
 
-        # project.on_build_started(
-        #     id="on-build-started",
-        #     target=targets.LambdaFunction(handler=pull_request_fn),
-        # )
+        project.on_build_started(
+            id="on-build-started",
+            target=targets.LambdaFunction(handler=codebuild_start_fn),
+        )
         project.on_build_succeeded(
             id="on-build-succeeded",
             target=targets.LambdaFunction(handler=codebuild_result_fn),
@@ -73,18 +73,18 @@ class CodecommitPullRequestStack(core.Stack):
             target=targets.LambdaFunction(handler=codebuild_result_fn),
         )
 
-        rule = repo.on_pull_request_state_change(
+        on_pull_request_state_change_rule = repo.on_pull_request_state_change(
             id="on-pull-request-change",
             event_pattern=events.EventPattern(
                 detail={"event": [
                     "pullRequestSourceBranchUpdated",
                     "pullRequestCreated",
                 ]}),
-            target=targets.LambdaFunction(
-                handler=pull_request_fn,
-            )
+            # target=targets.LambdaFunction(
+            #     handler=pull_request_fn,
+            # )
         )
-        rule.add_target(
+        on_pull_request_state_change_rule.add_target(
             target=targets.CodeBuildProject(
                 project=project,
                 event=events.RuleTargetInput.from_object(
